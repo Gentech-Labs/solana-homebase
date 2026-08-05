@@ -21,6 +21,17 @@ Q402 trust receipt on every payment
 - **Cheaper than bridging** — agents pay on the destination chain directly.
 - Matches the grant's own requirement: "live MVP + some Solana integration."
 
+### ⭐ The real advantage: the Solana DeFi community
+Solana isn't just a fast ledger — it's a **liquidity network with its own builder
+communities**. An agentic treasury on Solana taps into:
+- **Meteora** — dynamic liquidity pools + concentrated LP strategies
+- **Orca** — the concentrated-liquidity DEX, tight-range yield
+- **Raydium** — the central AMM + staking/farms
+- **+ 30 more routed through Jupiter** (Phoenix, Jito, etc.)
+
+One Solana wallet reaches the whole ecosystem through Jupiter — no bridging
+between DEXs. That's the edge over EVM.
+
 ## What's here
 | File | Purpose |
 |------|---------|
