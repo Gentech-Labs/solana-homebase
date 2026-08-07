@@ -50,10 +50,13 @@ Receipt logged (Q402 trust receipt pattern)
 - Test end-to-end: SOL buy, TAO buy, receipt.
 
 ## $200 coding-subscription documentation (tranche-2 requirement)
-The grant asks for coding subscription receipts totaling $200. Current stack:
-- OpenCode Go $10/mo, Ollama Cloud Pro $20/mo, Nous $20/mo, VPS $42/mo = **~$92/mo**.
-- **Need $200 total** — document 2-3 months of these (or add dev tools). Jordan to confirm
-  which receipts we can upload. This is the "agentic subscriptions" he flagged.
+The grant asks for coding subscription receipts totaling $200. Current stack (Jordan-confirmed Aug 7):
+- VPS (always-online) **$43/mo**
+- OpenCode Go **$10/mo**
+- Ollama Cloud **$20/mo**
+- Nous research sub **~$5-10/mo** (occasional)
+- **Fixed monthly ≈ $73** (VPS + OpenCode + Ollama); with Nous ≈ $78-83/mo.
+- **3 months of the fixed stack ≈ $219** — clears the $200 requirement. Document 3 months of VPS + OpenCode + Ollama receipts (or 2 months + Nous) to hit $200. Jordan to confirm which receipts we can upload.
 
 ## Repos for the submission
 - `github.com/ProtoJay4789/solana-x402-mvp` (MVP)
