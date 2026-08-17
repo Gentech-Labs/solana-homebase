@@ -25,8 +25,13 @@ import sys
 import requests
 from solders.keypair import Keypair
 from solders.transaction import VersionedTransaction
-from solana.rpc.api import Client
-from solana.rpc.types import TxOpts
+
+# solana.rpc.api.Client is only needed for balance checks + execute (not the
+# live quote path). Import lazily so the demo's quote works even when the
+# installed solana-py version lacks the sync Client (0.40+ is async-only).
+def _client():
+    from solana.rpc.api import Client
+    return Client(RPC)
 
 # ──────────────────── Constants ────────────────────
 RPC = os.environ.get("SOLANA_RPC", "https://api.mainnet-beta.solana.com")
@@ -122,7 +127,11 @@ def run_leg(symbol, side, amount, dry_run=True):
         else:
             raise
     wallet = str(kp.pubkey()) if kp else None
-    client = Client(RPC)
+    # Client is only needed for balance checks + execute. In DRY_RUN the quote
+    # path doesn't touch it — defer so a missing sync Client doesn't break quotes.
+    client = None
+    if not dry_run:
+        client = _client()
 
     input_mint = USDC_MINT if side == "buy" else entry["mint"]
     output_mint = entry["mint"] if side == "buy" else USDC_MINT
@@ -169,6 +178,7 @@ def run_leg(symbol, side, amount, dry_run=True):
 
     raw = VersionedTransaction.from_bytes(base64.b64decode(swap["swapTransaction"]))
     signed = VersionedTransaction(raw.message, [kp])
+    from solana.rpc.types import TxOpts
     sig = client.send_raw_transaction(bytes(signed), opts=TxOpts(skip_preflight=True)).value
 
     summary["executed"] = True
