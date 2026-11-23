@@ -46,6 +46,8 @@ def main():
         print("## 1. Wallet status")
         print(json.dumps(st, indent=2), "\n")
 
+    failures = []
+
     # 2. Live Jupiter quotes — the settlement proof
     print("## 2. Live settlement quotes (Jupiter, real)"
           if not os.environ.get("SOLANA_REAL")
@@ -55,8 +57,13 @@ def main():
                  "--symbol", sym, "--amount", "5")
         quote = q.get("quote", {})
         out = quote.get("out_amount")
-        print(f"  - {sym}: $5 USDC -> {out} {sym}" if out
-              else f"  - {sym}: {q.get('error', q)}")
+        if out:
+            print(f"  - {sym}: $5 USDC -> {out} {sym}")
+        else:
+            # A missing quote is a FAILURE, and it is named as one — the old code printed the
+            # traceback then announced "Live quotes verified above" two screens later.
+            failures.append(f"quote {sym}")
+            print(f"  - {sym}: FAILED — {str(q.get('error', q))[:200]}")
     print()
 
     # 3. Bridge quote (Across Base -> Solana)
@@ -76,9 +83,20 @@ def main():
     }
     print(json.dumps(plan, indent=2))
 
-    print("\n# ✅ Demo complete. Live quotes verified above. Ready for on-chain proof"
-          " when Solana wallet is funded (SOLANA_REAL=1).")
+    # The closing claim is DERIVED, never asserted. If a quote failed, this says so and exits non-zero,
+    # because a demo whose last line is always a green tick is worse than no demo.
+    if failures:
+        print(f"\n# ❌ Demo INCOMPLETE — {len(failures)} section(s) failed: {', '.join(failures)}.")
+        print("#    Nothing above should be read as a verified quote.")
+        return 2
+    print("\n# ✅ Demo complete — every quote above came back from Jupiter in this run.")
+    print("#    On-chain execution still requires a funded wallet (SOLANA_REAL=1).")
+    return 0
 
 
 if __name__ == "__main__":
     main()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -21,10 +21,22 @@ import json
 import os
 import statistics
 import sys
+import urllib.parse
+import urllib.request
 
-import requests
-from solders.keypair import Keypair
-from solders.transaction import VersionedTransaction
+# NOTE (2026-11-23): `requests` was imported but never declared anywhere, so this module raised
+# ModuleNotFoundError — while tranche2_demo.py printed "Live quotes verified above". A demo that
+# reports success over a traceback is the defect this repo exists to demonstrate the absence of.
+# Stdlib only now: the dependency cannot go missing.
+# Signing types are needed ONLY to execute. Importing them at module level made every read-only
+# path (quotes, balances) depend on a signing library — so a reviewer cloning this repo without
+# solders got ModuleNotFoundError instead of a live price. Lazy, and only where a signature happens.
+try:                                        # noqa: SIM105
+    from solders.keypair import Keypair
+    from solders.transaction import VersionedTransaction
+except ModuleNotFoundError:                 # read-only usage is fully supported
+    Keypair = None                          # type: ignore[assignment]
+    VersionedTransaction = None             # type: ignore[assignment]
 
 # solana.rpc.api.Client is only needed for balance checks + execute (not the
 # live quote path). Import lazily so the demo's quote works even when the
@@ -86,22 +98,37 @@ def _get_balance(client, pubkey_str, mint):
         return 0.0
 
 
+def _get_json(url, timeout=15):
+    """Small stdlib GET. A UA is not decoration: public RPCs answer 403 to the default urllib agent."""
+    req = urllib.request.Request(url, headers={"User-Agent": "gentech-solana-homebase/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode())
+
+
+def _post_json(url, payload, timeout=15):
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers={"Content-Type": "application/json",
+                                          "User-Agent": "gentech-solana-homebase/1.0"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode())
+
+
 def _median_priority_fee():
     """Estimate priority fee from recent blocks (median, not max — avoid drain)."""
     body = {"jsonrpc": "2.0", "id": 1, "method": "getRecentPrioritizationFees",
             "params": [[]]}
-    r = requests.post(RPC, json=body, timeout=10).json()
+    r = _post_json(RPC, body, timeout=10)
     fees = [x["prioritizationFee"] for x in r.get("result", [])]
     med = int(statistics.median(fees)) if fees else 0
     return int(med * PRIORITY_MULTIPLIER) or 1000
 
 
 def quote(input_mint, output_mint, amount_raw):
-    r = requests.get(JUPITER_QUOTE, params={
+    qs = urllib.parse.urlencode({
         "inputMint": input_mint, "outputMint": output_mint,
         "amount": amount_raw, "slippageBps": SLIPPAGE_BPS,
-    }, timeout=15).json()
-    return r
+    })
+    return _get_json(f"{JUPITER_QUOTE}?{qs}", timeout=15)
 
 
 def run_leg(symbol, side, amount, dry_run=True):
@@ -165,7 +192,7 @@ def run_leg(symbol, side, amount, dry_run=True):
 
     # Execute
     max_fee = _median_priority_fee()
-    swap = requests.post(JUPITER_SWAP, json={
+    swap = _post_json(JUPITER_SWAP, {
         "quoteResponse": q,
         "userPublicKey": wallet,
         "dynamicComputeUnitLimit": True,
@@ -174,7 +201,7 @@ def run_leg(symbol, side, amount, dry_run=True):
                 "maxLamports": max_fee, "priorityLevel": "veryHigh",
             }
         },
-    }, timeout=20).json()
+    }, timeout=20)
 
     raw = VersionedTransaction.from_bytes(base64.b64decode(swap["swapTransaction"]))
     signed = VersionedTransaction(raw.message, [kp])

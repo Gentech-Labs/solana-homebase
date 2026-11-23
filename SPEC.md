@@ -1,6 +1,11 @@
 # Solana as Homebase — Agentic Treasury MVP (Superteam Tranche-2 Deliverable)
 
-**Status:** Spec — BUILDING (Aug 5)
+**Status:** ✅ **BUILDING, VERIFIED 2026-11-23** — the quote rail runs end to end; on-chain execution
+still gated on a funded Solana wallet. Two defects were found and fixed on 2026-11-23 by running the
+demo it ships: (1) `gta_solana_leg.py` imported `requests`, which was never declared, so every quote
+raised `ModuleNotFoundError` — while `tranche2_demo.py` printed *"Live quotes verified above"*;
+(2) the demo's closing line was hardcoded, so it reported success over any failure.
+**Both were the same class: a program asserting a result nobody measured.**
 **Grant:** Superteam Earn Agentic Engineering — Tranche 2 unlock (second $100)
 **Goal:** A live, working MVP with **Solana integration** + documentable $200 coding subs.
 

@@ -3,6 +3,19 @@
 > **Superteam Earn — Agentic Engineering Grant (Tranche 2 deliverable)**
 > An autonomous treasury manager for AI agents that settles on **Solana**.
 
+**Status, 2026-11-23 — verified by running it, not by remembering it:**
+
+```
+python3 tranche2_demo.py --fast      # exits 0 only if every quote came back
+  SOL: $5 USDC -> 0.069387 SOL       (Jupiter, live)
+  TAO: $5 USDC -> 0.02601  TAO       (Jupiter, live)
+```
+
+The quote path needs **no signing library and no wallet** — stdlib only. Execution needs a funded
+keypair (`SOLANA_REAL=1`). If any quote fails, the demo now says `INCOMPLETE` and **exits 2**; the
+previous version printed tracebacks and then announced *"Live quotes verified above."*
+
+
 ## The Loop
 ```
 Agent earns USDC via x402 (any chain)
